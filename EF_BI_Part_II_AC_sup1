@@ -1,0 +1,17 @@
+### Generate order snapshot for January 2021 grouped by cuisine ###
+### Supplementary deliverable for Part II, EF BI Task
+
+SELECT
+    cuisine_parent AS Cuisine,
+    COUNT(order_id) AS Total_Orders,
+    COUNT(DISTINCT user_id) AS Total_Users,
+    ROUND(AVG(basket),2) AS Avg_Order_Value,
+    ROUND(SUM(basket),2) AS Total_Order_Value
+
+FROM `bi-2019-test.ad_hoc.orders_jan2021`
+
+GROUP BY 
+    cuisine_parent
+
+ORDER BY
+    total_order_value DESC
