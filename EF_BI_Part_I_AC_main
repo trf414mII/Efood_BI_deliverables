@@ -1,0 +1,38 @@
+### This section groups cities based on breakfast orders, customers ordering breakfast as well as their average spending ###
+### Deliverable for Part I, EF BI Task
+
+SELECT
+    A.city,
+    A.Breakfast_Orders, # Part I Q1
+    A.Breakfast_Users,  # Part I Q2
+    B.Average_BU_Basket # Part I Q3
+
+FROM
+    # Calculate Part I Q1 and Q2
+    (SELECT 
+        city,
+        COUNT(order_id) AS Breakfast_Orders,
+        COUNT(DISTINCT user_id) as Breakfast_Users
+    FROM `bi-2019-test.ad_hoc.orders_jan2021`
+    WHERE cuisine_parent = 'Breakfast'
+    AND city IN (SELECT city, FROM `bi-2019-test.ad_hoc.orders_jan2021` GROUP BY city HAVING COUNT(order_id)>500) # limit results to cities with more than 500 orders
+    GROUP BY city
+    ) AS A
+
+    LEFT JOIN
+       
+    # Calculate Part I Q3
+    (SELECT
+        city,
+        ROUND(AVG(basket),2) AS Average_BU_Basket # average basket value of breakfast users (reflecting their total orders irrespective of cuisine choice)
+    FROM `bi-2019-test.ad_hoc.orders_jan2021`
+    WHERE user_id IN (SELECT user_id FROM `bi-2019-test.ad_hoc.orders_jan2021` WHERE cuisine_parent = 'Breakfast') # only keep breakfast user ids
+    GROUP BY city
+    ) AS B
+
+    ON A.city = B.city # exclude any cities with no breakfast orders but including breakfast user ids
+
+ORDER BY 
+    A.Breakfast_Orders DESC
+
+LIMIT 10 # return first 10 rows
