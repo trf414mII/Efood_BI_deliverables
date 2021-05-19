@@ -1,0 +1,30 @@
+### This section segments the breakfast orders into indicative time windows for marketing purposes ###
+### Supplementary deliverable for Part II, EF BI Task
+
+SELECT 
+    Time_Window,
+    COUNT(order_id) AS Order_Count
+
+    FROM 
+    (
+    SELECT
+        order_id,
+        # Define time windows according to hour of day when order was submitted to the system
+        CASE
+            WHEN EXTRACT(HOUR FROM submit_dt) BETWEEN 06 AND 10 THEN 'Morning'
+            WHEN EXTRACT(HOUR FROM submit_dt) BETWEEN 11 AND 13 THEN 'Noon/Lunchtime'
+            WHEN EXTRACT(HOUR FROM submit_dt) BETWEEN 14 AND 17 THEN 'Afternoon'
+            WHEN EXTRACT(HOUR FROM submit_dt) BETWEEN 18 AND 21 THEN 'Evening'
+            WHEN EXTRACT(HOUR FROM submit_dt) BETWEEN 22 AND 23 THEN 'Nighttime'
+            WHEN EXTRACT(HOUR FROM submit_dt) BETWEEN 00 AND 05 THEN 'Nighttime'
+            ELSE NULL END AS Time_Window
+
+    FROM `bi-2019-test.ad_hoc.orders_jan2021`
+    WHERE cuisine_parent = 'Breakfast'
+    )
+
+GROUP BY
+    Time_Window
+
+ORDER BY
+    Order_Count DESC
