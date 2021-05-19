@@ -1,0 +1,46 @@
+### This section segments customers ordering from a specific cuisine based on frequency and value ###
+### Deliverable for Part II, EF BI Task
+
+DECLARE A,B FLOAT64; # Declare floats to store average value and frequency
+
+# Section I: Calculate average breakfast value and average breakfast order frequency to use in 2x binary segmentation (low/high thresholds)
+SET (A,B) = 
+(
+SELECT AS STRUCT
+    AVG(br_frequency),
+    AVG(avg_br_value)
+FROM
+    (
+    SELECT 
+        user_id,
+        COUNT(order_id) AS br_frequency,
+        ROUND(AVG(basket),2) AS avg_br_value,
+    FROM `bi-2019-test.ad_hoc.orders_jan2021`
+    WHERE cuisine_parent = 'Breakfast'
+    GROUP BY user_id
+    )
+);
+
+# Section II: Segment all breakfast customers into 4 groups based on order frequency and average order value. Use values stored in A, B for thresholding
+SELECT 
+    user_id,
+    COUNT(user_id) AS Br_Frequency,
+    ROUND(AVG(basket),2) AS Avg_Br_Value,
+    # Define user groups
+    CASE
+        WHEN COUNT(user_id)>=A AND AVG(basket)>=B THEN 'High Frequency,  High Value' # Group 1: Frequent users, high spenders
+        WHEN COUNT(user_id)>=A AND AVG(basket)<B THEN 'High Frequency,  Low Value' # Group 2: Frequent users, low spenders
+        WHEN COUNT(user_id)<A AND AVG(basket)>=B THEN 'Low Frequency,  High Value' # Group 3: Infrequent users, high spenders
+        WHEN COUNT(user_id)<A AND AVG(basket)<B THEN 'Low Frequency,  Low Value' # Group 4: Infrequent users, low spenders
+        ELSE NULL END AS Customer_Segment
+
+FROM `bi-2019-test.ad_hoc.orders_jan2021`
+
+WHERE
+    cuisine_parent = 'Breakfast'
+
+GROUP BY
+    user_id
+
+ORDER BY
+    Customer_Segment
